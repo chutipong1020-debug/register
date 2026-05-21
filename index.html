@@ -45,11 +45,6 @@
             font-weight: 700;
         }
 
-        .header img {
-            width: 28px;
-            height: 28px;
-        }
-
         .form-group {
             margin-bottom: 20px;
         }
@@ -88,10 +83,50 @@
             cursor: pointer;
             transition: background-color 0.2s;
             margin-top: 10px;
+            margin-bottom: 20px; /* เพิ่มระยะห่างด้านล่างปุ่ม */
         }
 
         .btn-submit:hover {
             background-color: #1557b0;
+        }
+
+        /* กล่องแจ้งเตือนสีเขียวด้านล่าง (ซ่อนไว้เริ่มต้นด้วย display: none) */
+        .success-box {
+            display: none; 
+            background-color: #e6f7ed;
+            border: 1px solid #b7ebc6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .success-title {
+            color: #1e7e34;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .success-details {
+            background-color: #ffffff;
+            border-radius: 6px;
+            padding: 12px 15px;
+            font-size: 14px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .highlight-text {
+            color: #1a73e8;
+            font-weight: bold;
+        }
+
+        /* เอฟเฟกต์ตอนแสดงผลให้ค่อยๆ โผล่ขึ้นมา */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -125,32 +160,41 @@
         
         <button type="submit" class="btn-submit">บันทึกข้อมูล</button>
     </form>
+
+    <div id="successBox" class="success-box">
+        <div class="success-title">🎉 ลงทะเบียนสำเร็จเรียบร้อยแล้ว!</div>
+        <div class="success-details">
+            <div>👤 <b>ชื่อ-นามสกุล:</b> <span id="resName" class="highlight-text"></span></div>
+            <div>📅 <b>วันที่:</b> <span id="resDate"></span></div>
+            <div>⏰ <b>เวลา:</b> <span id="resTime"></span> น.</div>
+        </div>
+    </div>
 </div>
 
 <script>
     // ส่วนเชื่อมต่อข้อมูลไปยัง Google Sheets 
     // เปลี่ยน URL ด้านล่างนี้เป็น URL Web App ของคุณที่ Deploy จาก Apps Script เป็นแบบ "Anyone"
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzS9L4OrA6T5REHRRJG7uu35xhuTYe1nW-m9wjX2catTpwGgcs0PxzFUFYyTX-Daegpng/exec";
+    const WEB_APP_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT_ของคุุณ";
 
     document.getElementById('registrationForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         const submitButton = e.target.querySelector('.btn-submit');
+        const successBox = document.getElementById('successBox');
+        
         submitButton.innerText = "กำลังบันทึก...";
         submitButton.disabled = true;
+        successBox.style.display = "none"; // ซ่อนกล่องอันเก่าก่อนถ้ามีการกดซ้ำ
 
         const formData = new FormData(this);
         const data = Object.fromEntries(formData.entries());
 
-        // ดึงชื่อ-นามสกุลจากฟอร์มมาเตรียมแสดงผล
-        const currentName = data.fullname;
-
-        // จัดรูปแบบ วัน-เวลา สำหรับแสดงผลให้ผู้ใช้เห็นทันทีหลังจากกดปุ่ม
+        // จัดรูปแบบ วัน-เวลา ภาษาไทย
         const now = new Date();
         const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
-        const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
         const formattedDate = now.toLocaleDateString('th-TH', optionsDate);
-        const formattedTime = now.toLocaleTimeString('th-TH', optionsTime);
+        // แสดงผลเวลาเป็นรูปแบบ HH:mm:ss
+        const formattedTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
         // ส่งข้อมูลไปยัง Google Apps Script
         fetch(WEB_APP_URL, {
@@ -162,13 +206,15 @@
             body: JSON.stringify(data)
         })
         .then(() => {
-            // แสดงผลลัพธ์สำเร็จพร้อม วัน เวลา และ ชื่อ-นามสกุล บนหน้าจอ
-            alert(
-                '🎉 บันทึกข้อมูลสำเร็จเรียบร้อยแล้ว!\n\n' +
-                '👤 ผู้ลงทะเบียน: ' + currentName + '\n' +
-                '📅 วันที่: ' + formattedDate + '\n' +
-                '⏰ เวลา: ' + formattedTime + ' น.'
-            );
+            // นำข้อมูลไปใส่ในกล่องข้อความสีเขียวด้านล่าง
+            document.getElementById('resName').innerText = data.fullname;
+            document.getElementById('resDate').innerText = formattedDate;
+            document.getElementById('resTime').innerText = formattedTime;
+
+            // สั่งให้กล่องสีเขียวแสดงผลขึ้นมา
+            successBox.style.display = "block";
+
+            // เคลียร์ข้อมูลในฟอร์มออกเพื่อให้พร้อมสำหรับคนต่อไป
             document.getElementById('registrationForm').reset();
         })
         .catch(error => {
@@ -181,3 +227,6 @@
         });
     });
 </script>
+
+</body>
+</html>
