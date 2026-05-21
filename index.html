@@ -1,11 +1,170 @@
 <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงทะเบียนเข้าร่วมกิจกรรม</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-<html>
-   <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-      <base target="_top">
-   </head>
-   <body>
-      <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;" src="https://script.google.com/macros/s/AKfycbz4tIf91l72kjgOGM7mwzwZLD_nQPiHRd9XmZWHxZx9FqgbSN7HAWM0pub8tXqUMEg/exec"></iframe>
-   </body>
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            color: #1a73e8;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .header img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #1a73e8;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: #1557b0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        📝 ลงทะเบียนเข้าร่วมกิจกรรม
+    </div>
+    
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="fullname">ชื่อ - นามสกุล</label>
+            <input type="text" id="fullname" name="fullname" required autocomplete="off">
+        </div>
+        
+        <div class="form-group">
+            <label for="addressNo">บ้านเลขที่</label>
+            <input type="text" id="addressNo" name="addressNo" required autocomplete="off">
+        </div>
+        
+        <div class="form-group">
+            <label for="moo">หมู่ที่</label>
+            <input type="text" id="moo" name="moo" required autocomplete="off">
+        </div>
+        
+        <div class="form-group">
+            <label for="subdistrict">ตำบล</label>
+            <input type="text" id="subdistrict" name="subdistrict" required autocomplete="off">
+        </div>
+        
+        <button type="submit" class="btn-submit">บันทึกข้อมูล</button>
+    </form>
+</div>
+
+<script>
+    // ส่วนเชื่อมต่อข้อมูลไปยัง Google Sheets (กรณีรันบน GitHub)
+    // เปลี่ยน URL ด้านล่างนี้เป็น URL Web App ของคุณที่ Deploy จาก Apps Script เป็นแบบ "Anyone"
+    const WEB_APP_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT_ของคุุณ";
+
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitButton = e.target.querySelector('.btn-submit');
+        submitButton.innerText = "กำลังบันทึก...";
+        submitButton.disabled = true;
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        // ส่งข้อมูลไปยัง Google Apps Script (ฝั่ง Server) ผ่าน Fetch API
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // จำเป็นต้องใส่หากต้องการส่งข้ามโดเมนจาก GitHub ไป Google
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            alert('บันทึกข้อมูลสำเร็จเรียบร้อยแล้ว!');
+            document.getElementById('registrationForm').reset();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        })
+        .finally(() => {
+            submitButton.innerText = "บันทึกข้อมูล";
+            submitButton.disabled = false;
+        });
+    });
+</script>
+
+</body>
 </html>
